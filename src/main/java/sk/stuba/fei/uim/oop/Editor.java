@@ -1,31 +1,42 @@
 package sk.stuba.fei.uim.oop;
 
-import sk.stuba.fei.uim.oop.utility.KeyboardInput;
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 
-public class Editor extends JFrame implements ActionListener {
+public class Editor extends JFrame implements ActionListener, ItemListener {
     String text = "";
-    int position = 0;
     JMenuItem exit;
     JMenuItem open;
     JMenuItem save;
-    TextArea edit;
+    JTextArea edit;
+    String[] fonts= GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames();
+    String currentFont = "Times New Roman";
+    JCheckBox italic;
+    JCheckBox bold;
+    Font font = new Font(currentFont,Font.PLAIN,12);
+    JTextField size;
+    int currNum = 12;
+    int fontStyle = 0;
 
     public Editor() throws HeadlessException {
-      edit = new TextArea();
+      edit = new JTextArea();
+      edit.setFont(font);
       add(edit);
-
-
+      Choice choice = new Choice();
+      for(String a:fonts){
+          choice.add(a);
+      }
+      choice.addItemListener(this);
       JMenuBar menuBar = new JMenuBar();
       setJMenuBar(menuBar);
+
+      size = new JTextField("12");
+      size.addActionListener(this);
       JMenu file = new JMenu("File");
       exit = new JMenuItem("Exit");
       open = new JMenuItem("Open");
@@ -36,9 +47,17 @@ public class Editor extends JFrame implements ActionListener {
       file.add(open);
       file.add(save);
       file.add(exit);
+      bold = new JCheckBox("Bold");
+      italic = new JCheckBox("Italic");
+      italic.addActionListener(this);
+      bold.addActionListener(this);
+
       menuBar.add(file);
-
-
+      menuBar.add(italic);
+      menuBar.add(bold);
+      menuBar.add(choice);
+      menuBar.add(new JLabel("Size"));
+      menuBar.add(size);
 
       setSize(600,600);
       setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -49,10 +68,35 @@ public class Editor extends JFrame implements ActionListener {
 
 
     }
+    private void changeStyleOfText(){
+        if(italic.isSelected()&& bold.isSelected()){
+            fontStyle = 3;
+        }
+        else if(italic.isSelected()){
+           fontStyle = 2;
+        }
+        else if (bold.isSelected()){
+            fontStyle = 1;
+        }
+        else {
+            fontStyle = Font.PLAIN;
+        }
+        font = new Font(currentFont, fontStyle, currNum);
 
+        edit.setFont(font);
+        repaint();
+    }
     @Override
     public void actionPerformed(ActionEvent e) {
         String operation = e.getActionCommand();
+        if(e.getSource()==size){
+            currNum = Integer.parseInt(operation);
+            changeStyleOfText();
+
+        }
+        if(operation.equals("Italic")||operation.equals("Bold")){
+         changeStyleOfText();
+        }
         if(operation.equals("Open")){
             FileDialog dialog = new FileDialog(this,"Open", FileDialog.LOAD);
             dialog.setVisible(true);
@@ -110,4 +154,11 @@ public class Editor extends JFrame implements ActionListener {
     }
 
 
+    @Override
+    public void itemStateChanged(ItemEvent e) {
+        System.out.println(e.getItem());
+        currentFont = (String) e.getItem();
+        System.out.println(currentFont);
+        changeStyleOfText();
+    }
 }
